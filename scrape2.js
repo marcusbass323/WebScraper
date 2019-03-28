@@ -1,29 +1,36 @@
 const request = require('request');
 const cheerio = require('cheerio');
+const fs = require('fs');
+const writeStream = fs.createWriteStream('post.csv');
 
-request('http://books.toscrape.com/', (error, response, html) => {
-    if(!error && response.statusCode) {
+//HEADERS
+writeStream.write(`Title,Link,In Stock \n`);
+
+request('http://books.toscrape.com/', (error, 
+    response, html) => {
+    if(!error && response.statusCode == 200) {
        const $ = cheerio.load(html);
 
        $('.product_pod').each((i, el) => {
            const title = $(el)
            .find('h3')
-           .text()
-           .replace(/\s\s+/g, '');
+           .text();
            
+
            const link = $(el)
            .find('a')
            .attr('href');
-
+        
            const inStock = $(el)
            .find('.instock.availability')
-           .text();
+           .text()
+           .replace(/\s\s+/g,'');
 
-
-
-           console.log(title, link, inStock)
-       })
-
+           //WRITE ROW TO CSV
+           writeStream.write(`${title}, ${link}, ${inStock} \n`);
+        })
+        
+        console.log('Scraping Complete')
     }
 });
 
